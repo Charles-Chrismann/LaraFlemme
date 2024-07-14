@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tracks', function (Blueprint $table) {
+        Schema::create('api_keys', function (Blueprint $table) {
             $table->id();
             $table->string('uuid')->unique();
-            $table->string('title');
-            $table->string('artist');
-            $table->string('image');
-            $table->string('music');
-            $table->boolean('display')->default(true);
-            $table->integer('play_count')->default(0);
+            $table->foreignId('user_id')->constrained();
+            $table->string('name');
+            $table->string('key');
             $table->timestamps();
         });
     }
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tracks');
+        Schema::dropIfExists('api_keys');
     }
 };

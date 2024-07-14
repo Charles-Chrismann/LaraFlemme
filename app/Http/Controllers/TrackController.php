@@ -2,64 +2,111 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Track;
-use Inertia\Inertia;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class TrackController extends Controller
 {
-  public function index() {
-    $tracks = Track::where('display', true)->orderBy('artist')->get();
-    return Inertia::render('Track/index', [
-      'tracks' => $tracks
-    ]);
-  }
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $tracks = Track::where('display', true)->orderBy('artist')->get();
 
-  public function create() {
-    return Inertia::render('Track/create');
-  }
-  public function store(Request $request) {
-    $request->validate([
-      'title' => ['required', 'string', 'min:5', 'max:255'],
-      'artist' => ['required', 'string', 'min:3', 'max:255'],
-      'display' => ['required', 'boolean'],
-      'image' => ['required', 'image'],
-      'music' => ['required', 'file', 'mimes:mp3,wav'],
-    ]);
+        return Inertia::render('Track/Index', [
+            'tracks' => $tracks,
+        ]);
+    }
 
-    $uuid = 'trk-' . Str::uuid();
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return Inertia::render('Track/Create');
+    }
 
-    $imageExtension = $request->image->extension();
-    $imagePath = $request->image->storAs('tracks/images', $uuid . '.' . $imageExtension);
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => ['required', 'string', 'min:5', 'max:255'],
+            'artist' => ['required', 'string', 'min:3', 'max:255'],
+            'display' => ['required', 'boolean'],
+            'image' => ['required', 'image', 'max:10000'],
+            'music' => ['required', 'file', 'mimes:mp3,wav', 'max:10000'],
+        ]);
 
-    $musicExtension = $request->music->extension();
-    $musicPath = $request->music->storAs('tracks/musics', $uuid . '.' . $musicExtension);
+        $uuid = 'trk-' . Str::uuid();
 
-    Track::create([
-      'uuid' => $uuid,
-      'title' => $request->title,
-      'artist' => $request->artist,
-      'display' => $request->display,
-      'image' => $imagePath,
-      'music' =>$musicPath
-    ]);
+        $imageExtension = $request->image->extension();
+        $imagePath = $request->image->storeAs('tracks/images', $uuid . '.' . $imageExtension);
 
-    return redirect()->route('tracks.index');
-  }
+        $musicExtension = $request->music->extension();
+        $musicPath = $request->music->storeAs('tracks/musics', $uuid . '.' . $musicExtension);
 
-  public function show() {
+        Track::create([
+            'uuid' => $uuid,
+            'title' => $request->title,
+            'artist' => $request->artist,
+            'display' => $request->display,
+            'image' => $imagePath,
+            'music' => $musicPath,
+        ]);
 
-  }
-  public function edit() {
+        return redirect()->route('tracks.index');
+    }
 
-  }
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
 
-  public function update() {
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Track $track)
+    {
+        return Inertia::render('Track/Edit', [
+            'track' => $track,
+        ]);
+    }
 
-  }
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Track $track)
+    {
+        $request->validate([
+            'title' => ['required', 'string', 'min:5', 'max:255'],
+            'artist' => ['required', 'string', 'min:3', 'max:255'],
+            'display' => ['required', 'boolean'],
+        ]);
 
-  public function destroy() {
+        $track->title = $request->title;
+        $track->artist = $request->artist;
+        $track->display = $request->display;
+        $track->save();
 
-  }
+        return redirect()->route('tracks.index');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Track $track)
+    {
+      dd($track);
+        $track->delete();
+
+        return redirect()->route('tracks.index');
+    }
 }
